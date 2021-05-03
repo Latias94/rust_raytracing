@@ -21,7 +21,7 @@ pub fn ray_color(ray: &Ray, world: &HittableList, depth: usize) -> Vec3 {
 
     let result = world.hit(0.001, f32::MAX, ray);
     if let Some(rec) = result {
-        let target: Vec3 = rec.p + rec.normal.unwrap() + Vec3::random_unit_vector();
+        let target: Vec3 = rec.p +  Vec3::random_in_hemisphere(&rec.normal.unwrap());
         return 0.5 * ray_color(&Ray::new(rec.p, target - rec.p), world, depth - 1);
     }
     const WHITE: Vec3 = Vec3(1.0, 1.0, 1.0);
