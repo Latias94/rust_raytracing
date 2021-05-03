@@ -1,12 +1,15 @@
+mod camera;
 mod hit;
 mod ray;
 mod utils;
 mod vec;
 
+use crate::camera::Camera;
 use crate::hit::{Hittable, HittableList, Sphere};
 use crate::ray::Ray;
 use crate::vec::Vec3;
 use lodepng::RGB;
+use rand::Rng;
 use std::path::Path;
 
 pub fn ray_color(ray: &Ray, world: &HittableList) -> Vec3 {
@@ -26,6 +29,7 @@ fn main() {
     const ASPECT_RATIO: f32 = 16.0 / 9.0;
     const WIDTH: usize = 400;
     const HEIGHT: usize = (WIDTH as f32 / ASPECT_RATIO) as usize;
+    const SAMPLES_PER_PIXEL: usize = 100;
 
     // World
     let mut world = HittableList::new();
@@ -41,29 +45,23 @@ fn main() {
     world.add(Box::new(sphere2));
 
     // Camera
-    let viewport_height: f32 = 2.0;
-    let viewport_width: f32 = ASPECT_RATIO * viewport_height;
-    // the distance between the projection plane and the projection point
-    let focal_length: f32 = 1.0;
+    let cam = Camera::new();
 
-    let origin = Vec3(0.0, 0.0, 0.0);
-    let horizontal = Vec3(viewport_width, 0.0, 0.0);
-    let vertical = Vec3(0.0, viewport_height, 0.0);
-    let lower_left_corner =
-        origin - horizontal / 2.0 - vertical / 2.0 - Vec3(0.0, 0.0, focal_length);
+    // random f32
+    let mut rng = rand::thread_rng();
 
     // Render
     let mut pixels: Vec<RGB<u8>> = Vec::with_capacity(WIDTH * HEIGHT);
     for j in (0..HEIGHT).rev() {
         for i in 0..WIDTH {
-            let u: f32 = (i as f32) / (WIDTH - 1) as f32;
-            let v: f32 = (j as f32) / (HEIGHT - 1) as f32;
-            let r = Ray::new(
-                origin,
-                lower_left_corner + u * horizontal + v * vertical - origin,
-            );
-            let pixel_color = ray_color(&r, &world);
-            let pixel = pixel_color.to_rgb();
+            let mut pixel_color = Vec3(0.0, 0.0, 0.0);
+            for s in 0..SAMPLES_PER_PIXEL {
+                let u: f32 = (i as f32 + rng.gen_range(0.0..1.0)) / (WIDTH - 1) as f32;
+                let v: f32 = (j as f32 + rng.gen_range(0.0..1.0)) / (HEIGHT - 1) as f32;
+                let r = cam.get_ray(u, v);
+                pixel_color = pixel_color + ray_color(&r, &world);
+            }
+            let pixel = pixel_color.to_rgb_sampled(SAMPLES_PER_PIXEL);
             pixels.push(pixel);
         }
     }

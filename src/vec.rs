@@ -53,6 +53,16 @@ impl Vec3 {
         let rgb = &self.to_u8();
         RGB::new(rgb[0], rgb[1], rgb[2])
     }
+    pub fn to_rgb_sampled(&self, samples_per_pixel: usize) -> RGB<u8> {
+        let scale = 1.0 / (samples_per_pixel as f32);
+        let r = scale * self.0 as f32;
+        let r = (256.0 * f32::clamp(r, 0.0, 0.999)) as u8;
+        let g = scale * self.1 as f32;
+        let g = (256.0 * f32::clamp(g, 0.0, 0.999)) as u8;
+        let b = scale * self.2 as f32;
+        let b = (256.0 * f32::clamp(b, 0.0, 0.999)) as u8;
+        RGB::new(r, g, b)
+    }
 
     pub fn to_unit_vector(&self) -> Vec3 {
         *self / self.length()
