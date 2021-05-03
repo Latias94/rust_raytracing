@@ -57,11 +57,12 @@ impl Vec3 {
 
     pub fn to_rgb_sampled(&self, samples_per_pixel: usize) -> RGB<u8> {
         let scale = 1.0 / (samples_per_pixel as f32);
-        let r = scale * self.0 as f32;
+        // Divide the color by the number of samples and gamma-correct for gamma=2.0.
+        let r = (scale * self.0 as f32).sqrt();
         let r = (256.0 * f32::clamp(r, 0.0, 0.999)) as u8;
-        let g = scale * self.1 as f32;
+        let g = (scale * self.1 as f32).sqrt();
         let g = (256.0 * f32::clamp(g, 0.0, 0.999)) as u8;
-        let b = scale * self.2 as f32;
+        let b = (scale * self.2 as f32).sqrt();
         let b = (256.0 * f32::clamp(b, 0.0, 0.999)) as u8;
         RGB::new(r, g, b)
     }
@@ -121,11 +122,7 @@ impl Div<f32> for Vec3 {
 
 impl Distribution<Vec3> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Vec3 {
-        Vec3(
-            rng.gen(),
-            rng.gen(),
-            rng.gen(),
-        )
+        Vec3(rng.gen(), rng.gen(), rng.gen())
     }
 }
 
