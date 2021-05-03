@@ -135,12 +135,16 @@ impl Vec3 {
     //     )
     // }
 
-    pub(crate) fn rand_in_unit_sphere() -> Vec3 {
+    pub fn rand_in_unit_sphere() -> Vec3 {
         loop {
             let p = 2.0 * random::<Vec3>() - Vec3(1.0, 1.0, 1.0);
             if p.squared_length() < 1.0 {
                 return p;
             }
         }
+    }
+
+    pub fn random_unit_vector() -> Vec3 {
+        Vec3::rand_in_unit_sphere().to_unit_vector()
     }
 }
