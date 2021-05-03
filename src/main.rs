@@ -6,7 +6,6 @@ use crate::vec::Vec3;
 use lodepng::RGB;
 use std::path::Path;
 
-// struct Pixel(usize, usize, usize);
 fn main() {
     // Image
     const ASPECT_RATIO: f32 = 16.0 / 9.0;
