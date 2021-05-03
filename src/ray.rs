@@ -15,11 +15,26 @@ impl Ray {
         self.origin + t * self.direction
     }
 
-    /// 根据 y 值将蓝白做了个线性插值的混合, 我们这里把射线做了个单位化, 以保证 y 的取值范围
-    // (-1.0 < y < 1.0) 。因为我们使用 y 轴做渐变, 所以你可以看到这个蓝白渐变也是竖直的。
     pub fn ray_color(&self) -> Vec3 {
+        const WHITE: Vec3 = Vec3(1.0, 1.0, 1.0);
+        const SKY_BLUE: Vec3 = Vec3(0.5, 0.7, 1.0);
+        const RED: Vec3 = Vec3(1.0, 0.0, 0.0);
+
+        if self.hit_sphere(Vec3(0.0, 0.0, -1.0), 0.5) {
+            return RED;
+        }
+        
         let unit_direction = self.direction.to_unit_vector();
         let t = 0.5 * (unit_direction.y() + 1.0);
-        (1.0 - t) * Vec3(1.0, 1.0, 1.0) + t * Vec3(0.5, 0.7, 1.0)
+        (1.0 - t) * WHITE + t * SKY_BLUE
+    }
+
+    pub fn hit_sphere(&self, center: Vec3, radius: f32) -> bool {
+        let oc = self.origin - center;
+        let a = self.direction.dot(self.direction);
+        let b = 2.0 * oc.dot(self.direction);
+        let c = oc.dot(oc) - radius * radius;
+        let discriminant = b * b - 4.0 * a * c;
+        discriminant > 0.0
     }
 }
