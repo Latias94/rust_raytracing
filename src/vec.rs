@@ -1,5 +1,6 @@
 use lodepng::RGB;
-use rand::Rng;
+use rand::distributions::{Distribution, Standard};
+use rand::{random, Rng};
 use std::ops::*;
 
 #[derive(Copy, Clone, Debug)]
@@ -53,6 +54,7 @@ impl Vec3 {
         let rgb = &self.to_u8();
         RGB::new(rgb[0], rgb[1], rgb[2])
     }
+
     pub fn to_rgb_sampled(&self, samples_per_pixel: usize) -> RGB<u8> {
         let scale = 1.0 / (samples_per_pixel as f32);
         let r = scale * self.0 as f32;
@@ -117,8 +119,31 @@ impl Div<f32> for Vec3 {
     }
 }
 
+impl Distribution<Vec3> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Vec3 {
+        Vec3(
+            rng.gen(),
+            rng.gen(),
+            rng.gen(),
+        )
+    }
+}
+
 impl Vec3 {
-    fn rand<R: Rng>(rng: &mut R) -> Vec3 {
-        Vec3(rng.gen(), rng.gen(), rng.gen())
+    // fn rand_in_range<R: Rng>(rng: &mut R, min: f32, max: f32) -> Vec3 {
+    //     Vec3(
+    //         rng.gen_range(min..max),
+    //         rng.gen_range(min..max),
+    //         rng.gen_range(min..max),
+    //     )
+    // }
+
+    pub(crate) fn rand_in_unit_sphere() -> Vec3 {
+        loop {
+            let p = 2.0 * random::<Vec3>() - Vec3(1.0, 1.0, 1.0);
+            if p.squared_length() < 1.0 {
+                return p;
+            }
+        }
     }
 }
