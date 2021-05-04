@@ -1,14 +1,14 @@
 use crate::materials::Material;
 use crate::ray::Ray;
 use crate::vec::Vec3;
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct Hit {
     pub t: f32,  // 光击中物体时 t 的大小
     pub p: Vec3, // 击中的点的位置
     pub normal: Option<Vec3>,
     pub front_face: Option<bool>,
-    pub material: Option<Rc<dyn Material>>,
+    pub material: Option<Arc<dyn Material>>,
 }
 
 impl Hit {
@@ -33,14 +33,14 @@ impl Hit {
     }
 }
 
-pub trait Hittable {
+pub trait Hittable : Send + Sync{
     fn hit(&self, t_min: f32, t_max: f32, r: &Ray) -> Option<Hit>;
 }
 
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f32,
-    pub material: Rc<dyn Material>,
+    pub material: Arc<dyn Material>,
 }
 
 impl Hittable for Sphere {

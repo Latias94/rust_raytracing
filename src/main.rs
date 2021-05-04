@@ -13,8 +13,10 @@ use crate::vec::Vec3;
 use indicatif::ProgressBar;
 use lodepng::RGB;
 use rand::Rng;
+use rayon::iter::IntoParallelIterator;
+use rayon::prelude::*;
 use std::path::Path;
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub fn ray_color(ray: &Ray, world: &HittableList, depth: usize) -> Vec3 {
     // If we've exceeded the ray bounce limit, no more light is gathered.
@@ -40,7 +42,7 @@ pub fn ray_color(ray: &Ray, world: &HittableList, depth: usize) -> Vec3 {
 
 pub fn random_scene() -> HittableList {
     let mut world = HittableList::new();
-    let ground_material = Rc::new(Lambertian::new(Vec3(0.5, 0.5, 0.5)));
+    let ground_material = Arc::new(Lambertian::new(Vec3(0.5, 0.5, 0.5)));
     world.add(Box::new(Sphere {
         center: Vec3(0.0, -1000.0, 0.0),
         radius: 1000.0,
@@ -60,19 +62,19 @@ pub fn random_scene() -> HittableList {
                 b as f32 + 0.9 * random_double(),
             );
             if (center - Vec3(4.0, 0.2, 0.0)).length() > 0.9 {
-                let sphere_material: Rc<dyn Material>;
+                let sphere_material: Arc<dyn Material>;
                 if choose_mat < 0.8 {
                     // diffuse
                     let albedo = Vec3::random_color() * Vec3::random_color();
-                    sphere_material = Rc::new(Lambertian::new(albedo));
+                    sphere_material = Arc::new(Lambertian::new(albedo));
                 } else if choose_mat < 0.95 {
                     // metal
                     let albedo = Vec3::random_color_in_range(0.5, 1.0);
                     let fuzz = random_double_in_range(0.0, 0.5);
-                    sphere_material = Rc::new(Metal::new(albedo, fuzz));
+                    sphere_material = Arc::new(Metal::new(albedo, fuzz));
                 } else {
                     // glass
-                    sphere_material = Rc::new(Dielectric::new(1.5));
+                    sphere_material = Arc::new(Dielectric::new(1.5));
                 }
                 world.add(Box::new(Sphere {
                     center,
@@ -83,21 +85,21 @@ pub fn random_scene() -> HittableList {
         }
     }
 
-    let material1 = Rc::new(Dielectric::new(1.5));
+    let material1 = Arc::new(Dielectric::new(1.5));
     world.add(Box::new(Sphere {
-        center: Vec3(0.0, 0.0, -1.0),
-        radius: 0.5,
+        center: Vec3(0.0, 1.0, 0.0),
+        radius: 1.0,
         material: material1,
     }));
 
-    let material2 = Rc::new(Lambertian::new(Vec3(0.4, 0.2, 0.1)));
+    let material2 = Arc::new(Lambertian::new(Vec3(0.4, 0.2, 0.1)));
     world.add(Box::new(Sphere {
         center: Vec3(-4.0, 1.0, 0.0),
         radius: 1.0,
         material: material2,
     }));
 
-    let material3 = Rc::new(Metal::new(Vec3(0.7, 0.6, 0.5), 0.0));
+    let material3 = Arc::new(Metal::new(Vec3(0.7, 0.6, 0.5), 0.0));
     world.add(Box::new(Sphere {
         center: Vec3(4.0, 1.0, 0.0),
         radius: 1.0,
@@ -134,28 +136,30 @@ fn main() {
         dist_to_focus,
     );
 
-    // random f32
-    let mut rng = rand::thread_rng();
-
     // Progress bar
     let bar = ProgressBar::new(HEIGHT as u64);
 
     // Render
-    let mut pixels: Vec<RGB<u8>> = Vec::with_capacity(WIDTH * HEIGHT);
-    for j in (0..HEIGHT).rev() {
-        for i in 0..WIDTH {
+    let white = (256.0 * f32::clamp(1.0, 0.0, 0.999)) as u8;
+    let mut pixels: Vec<RGB<u8>> = vec![RGB::new(white, white, white); WIDTH * HEIGHT];
+
+    let bands: Vec<(usize, &mut [RGB<u8>])> = pixels.chunks_mut(WIDTH).enumerate().collect();
+    bands.into_par_iter().for_each(|(row, band)| {
+        let height = HEIGHT - row;
+        let mut rng = rand::thread_rng();
+        for column in 0..WIDTH {
             let mut pixel_color = Vec3(0.0, 0.0, 0.0);
             for _s in 0..SAMPLES_PER_PIXEL {
-                let u: f32 = (i as f32 + rng.gen_range(0.0..1.0)) / (WIDTH - 1) as f32;
-                let v: f32 = (j as f32 + rng.gen_range(0.0..1.0)) / (HEIGHT - 1) as f32;
+                let u: f32 = (column as f32 + rng.gen_range(0.0..1.0)) / (WIDTH - 1) as f32;
+                let v: f32 = (height as f32 + rng.gen_range(0.0..1.0)) / (HEIGHT - 1) as f32;
                 let r = cam.get_ray(u, v);
                 pixel_color = pixel_color + ray_color(&r, &world, MAX_DEPTH);
             }
             let pixel = pixel_color.to_rgb_sampled(SAMPLES_PER_PIXEL);
-            pixels.push(pixel);
+            band[column] = pixel;
         }
         bar.inc(1);
-    }
+    });
 
     bar.finish();
 

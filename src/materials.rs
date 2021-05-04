@@ -10,7 +10,7 @@ pub struct Scatter {
 }
 
 // 材料将告诉我们光线如何与表面相互作用
-pub trait Material {
+pub trait Material: Send + Sync {
     fn scatter(&self, r_in: &Ray, rec: &Hit) -> Option<Scatter>;
 }
 
