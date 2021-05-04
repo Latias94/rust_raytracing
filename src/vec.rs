@@ -163,9 +163,18 @@ impl Vec3 {
         loop {
             let p = Vec3(gen_range(), gen_range(), 0.0);
             if p.length_squared() < 1.0 {
-                return p
+                return p;
             }
         }
+    }
+
+    pub fn random_color() -> Vec3 {
+        Vec3::random_color_in_range(0.0,1.0)
+    }
+
+    pub fn random_color_in_range(min: f32, max: f32) -> Vec3 {
+        let gen_range = || -> f32 { rand::thread_rng().gen_range(min..max) };
+        Vec3(gen_range(), gen_range(), gen_range())
     }
 
     pub fn random_in_unit_sphere() -> Vec3 {
