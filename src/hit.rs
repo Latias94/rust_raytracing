@@ -1,12 +1,14 @@
+use crate::materials::Material;
 use crate::ray::Ray;
 use crate::vec::Vec3;
+use std::rc::Rc;
 
-#[derive(Clone, Copy)]
 pub struct Hit {
-    pub t: f32,
-    pub p: Vec3,
+    pub t: f32,  // 光击中物体时 t 的大小
+    pub p: Vec3, // 击中的点的位置
     pub normal: Option<Vec3>,
     pub front_face: Option<bool>,
+    pub material: Option<Rc<dyn Material>>,
 }
 
 impl Hit {
@@ -16,6 +18,7 @@ impl Hit {
             p,
             normal: None,
             front_face: None,
+            material: None,
         }
     }
     pub fn set_face_normal(&mut self, ray: &Ray, outward_normal: Vec3) {
@@ -37,6 +40,7 @@ pub trait Hittable {
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f32,
+    pub material: Rc<dyn Material>,
 }
 
 impl Hittable for Sphere {
@@ -63,15 +67,18 @@ impl Hittable for Sphere {
         let mut hit = Hit::new(t, p);
         let outward_normal = (hit.p - self.center) / self.radius;
         hit.set_face_normal(ray, outward_normal);
+        hit.material = Some(self.material.clone());
         Some(hit)
     }
 }
+
 pub struct HittableList {
     pub objects: Vec<Box<dyn Hittable>>,
 }
+
 impl HittableList {
     pub fn new() -> HittableList {
-        HittableList { objects: vec![], }
+        HittableList { objects: vec![] }
     }
 
     pub fn clear(&mut self) {

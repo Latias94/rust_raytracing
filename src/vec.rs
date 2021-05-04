@@ -70,6 +70,12 @@ impl Vec3 {
     pub fn to_unit_vector(&self) -> Vec3 {
         *self / self.length()
     }
+
+    /// Return true if the vector is close to zero in all dimensions.
+    pub fn near_zero(&self) -> bool {
+        let s: f32 = 1e-8;
+        (libm::fabsf(self.0) < s) && (libm::fabsf(self.1) < s) && (libm::fabsf(self.2) < s)
+    }
 }
 
 impl Neg for Vec3 {
@@ -135,6 +141,10 @@ impl Vec3 {
     //     )
     // }
 
+    pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+        *v - 2.0 * v.dot(*n) * *n
+    }
+
     pub fn rand_in_unit_sphere() -> Vec3 {
         loop {
             let p = 2.0 * random::<Vec3>() - Vec3(1.0, 1.0, 1.0);
@@ -150,7 +160,8 @@ impl Vec3 {
 
     pub fn random_in_hemisphere(normal: &Vec3) -> Vec3 {
         let in_unit_sphere = Vec3::rand_in_unit_sphere();
-        if in_unit_sphere.dot(*normal) > 0.0 {  // In the same hemisphere as the normal
+        if in_unit_sphere.dot(*normal) > 0.0 {
+            // In the same hemisphere as the normal
             in_unit_sphere
         } else {
             -in_unit_sphere

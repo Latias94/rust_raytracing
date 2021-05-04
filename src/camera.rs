@@ -8,6 +8,7 @@ pub struct Camera {
     horizontal: Vec3,
     vertical: Vec3,
 }
+
 impl Camera {
     pub fn new() -> Camera {
         let aspect_ratio: f32 = 16.0 / 9.0;

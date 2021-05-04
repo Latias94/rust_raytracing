@@ -1,30 +1,38 @@
 mod camera;
 mod hit;
+mod materials;
 mod ray;
 mod utils;
 mod vec;
 
 use crate::camera::Camera;
 use crate::hit::{Hittable, HittableList, Sphere};
+use crate::materials::{Lambertian, Metal};
 use crate::ray::Ray;
 use crate::vec::Vec3;
 use indicatif::ProgressBar;
 use lodepng::RGB;
 use rand::Rng;
 use std::path::Path;
+use std::rc::Rc;
 
 pub fn ray_color(ray: &Ray, world: &HittableList, depth: usize) -> Vec3 {
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if depth == 0 {
         return Vec3(0.0, 0.0, 0.0);
     }
+    const WHITE: Vec3 = Vec3(1.0, 1.0, 1.0);
 
     let result = world.hit(0.001, f32::MAX, ray);
-    if let Some(rec) = result {
-        let target: Vec3 = rec.p +  Vec3::random_in_hemisphere(&rec.normal.unwrap());
-        return 0.5 * ray_color(&Ray::new(rec.p, target - rec.p), world, depth - 1);
+    if let Some(mut rec) = result {
+        let material =  rec.material.unwrap();
+        rec.material = None;
+        return if let Some(scattered) = material.scatter(&ray, &rec) {
+            scattered.attenuation * ray_color(&scattered.ray, &world, depth - 1)
+        } else {
+            WHITE
+        };
     }
-    const WHITE: Vec3 = Vec3(1.0, 1.0, 1.0);
     const SKY_BLUE: Vec3 = Vec3(0.5, 0.7, 1.0);
     let unit_direction = ray.direction.to_unit_vector();
     let t = 0.5 * (unit_direction.y() + 1.0);
@@ -41,16 +49,31 @@ fn main() {
 
     // World
     let mut world = HittableList::new();
-    let sphere1 = Sphere {
-        center: Vec3(0.0, 0.0, -1.0),
-        radius: 0.5,
-    };
-    let sphere2 = Sphere {
+    let material_ground = Rc::new(Lambertian::new(Vec3(0.8, 0.8, 0.0)));
+    let material_center = Rc::new(Lambertian::new(Vec3(0.7, 0.3, 0.3)));
+    let material_left = Rc::new(Metal::new(Vec3(0.8, 0.8, 0.8)));
+    let material_right = Rc::new(Metal::new(Vec3(0.8, 0.6, 0.2)));
+
+    world.add(Box::new(Sphere {
         center: Vec3(0.0, -100.5, -1.0),
         radius: 100.0,
-    };
-    world.add(Box::new(sphere1));
-    world.add(Box::new(sphere2));
+        material: material_ground.clone(),
+    }));
+    world.add(Box::new(Sphere {
+        center: Vec3(0.0, 0.0, -1.0),
+        radius: 0.5,
+        material: material_center.clone(),
+    }));
+    world.add(Box::new(Sphere {
+        center: Vec3(-1.0, 0.0, -1.0),
+        radius: 0.5,
+        material: material_left.clone(),
+    }));
+    world.add(Box::new(Sphere {
+        center: Vec3(1.0, 0.0, -1.0),
+        radius: 0.5,
+        material: material_right.clone(),
+    }));
 
     // Camera
     let cam = Camera::new();
