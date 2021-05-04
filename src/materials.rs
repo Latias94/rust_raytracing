@@ -46,11 +46,15 @@ impl Material for Lambertian {
 pub struct Metal {
     // 反射率
     pub albedo: Vec3,
+    pub fuzz: f32,
 }
 
 impl Metal {
-    pub fn new(color: Vec3) -> Metal {
-        Metal { albedo: color }
+    pub fn new(color: Vec3, f: f32) -> Metal {
+        Metal {
+            albedo: color,
+            fuzz: if f < 1.0 { f } else { 1.0 },
+        }
     }
 }
 
@@ -59,7 +63,7 @@ impl Material for Metal {
         let reflected = Vec3::reflect(&r_in.direction.to_unit_vector(), &rec.normal.unwrap());
         let scattered = Ray {
             origin: rec.p,
-            direction: reflected,
+            direction: reflected + self.fuzz * Vec3::rand_in_unit_sphere(),
         };
         let same_direction = scattered.direction.dot(rec.normal.unwrap()) > 0.0;
         if same_direction {

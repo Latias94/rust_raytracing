@@ -21,7 +21,6 @@ pub fn ray_color(ray: &Ray, world: &HittableList, depth: usize) -> Vec3 {
     if depth == 0 {
         return Vec3(0.0, 0.0, 0.0);
     }
-    const WHITE: Vec3 = Vec3(1.0, 1.0, 1.0);
 
     let result = world.hit(0.001, f32::MAX, ray);
     if let Some(mut rec) = result {
@@ -30,9 +29,10 @@ pub fn ray_color(ray: &Ray, world: &HittableList, depth: usize) -> Vec3 {
         return if let Some(scattered) = material.scatter(&ray, &rec) {
             scattered.attenuation * ray_color(&scattered.ray, &world, depth - 1)
         } else {
-            WHITE
+            Vec3(0.0, 0.0, 0.0)
         };
     }
+    const WHITE: Vec3 = Vec3(1.0, 1.0, 1.0);
     const SKY_BLUE: Vec3 = Vec3(0.5, 0.7, 1.0);
     let unit_direction = ray.direction.to_unit_vector();
     let t = 0.5 * (unit_direction.y() + 1.0);
@@ -51,8 +51,8 @@ fn main() {
     let mut world = HittableList::new();
     let material_ground = Rc::new(Lambertian::new(Vec3(0.8, 0.8, 0.0)));
     let material_center = Rc::new(Lambertian::new(Vec3(0.7, 0.3, 0.3)));
-    let material_left = Rc::new(Metal::new(Vec3(0.8, 0.8, 0.8)));
-    let material_right = Rc::new(Metal::new(Vec3(0.8, 0.6, 0.2)));
+    let material_left = Rc::new(Metal::new(Vec3(0.8, 0.8, 0.8), 0.3));
+    let material_right = Rc::new(Metal::new(Vec3(0.8, 0.6, 0.2), 0.2));
 
     world.add(Box::new(Sphere {
         center: Vec3(0.0, -100.5, -1.0),
