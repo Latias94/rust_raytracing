@@ -46,18 +46,18 @@ pub struct Sphere {
 impl Hittable for Sphere {
     fn hit(&self, t_min: f32, t_max: f32, ray: &Ray) -> Option<Hit> {
         let oc = ray.origin - self.center;
-        let a = ray.direction.dot(ray.direction);
+        let a = ray.direction.squared_length();
         let half_b = oc.dot(ray.direction);
-        let c = oc.dot(oc) - self.radius * self.radius;
+        let c = oc.squared_length() - self.radius * self.radius;
         let discriminant = half_b * half_b - a * c;
         if discriminant < 0.0 {
             return None;
         }
         let sqrt_d = discriminant.sqrt();
         // Find the nearest root that lies in the acceptable range.
-        let root = (-half_b - sqrt_d) / a;
+        let mut root = (-half_b - sqrt_d) / a;
         if root < t_min || t_max < root {
-            let root = (-half_b + sqrt_d) / a;
+            root = (-half_b + sqrt_d) / a;
             if root < t_min || t_max < root {
                 return None;
             }
@@ -65,7 +65,7 @@ impl Hittable for Sphere {
         let t = root;
         let p = ray.at(root);
         let mut hit = Hit::new(t, p);
-        let outward_normal = (hit.p - self.center) / self.radius;
+        let outward_normal = (p - self.center) / self.radius;
         hit.set_face_normal(ray, outward_normal);
         hit.material = Some(self.material.clone());
         Some(hit)
