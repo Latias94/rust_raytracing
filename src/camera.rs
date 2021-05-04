@@ -1,6 +1,6 @@
 use crate::ray::Ray;
-use crate::vec::Vec3;
 use crate::utils::degrees_to_radians;
+use crate::vec::Vec3;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Camera {
@@ -11,19 +11,20 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(vfov: f32, aspect_ratio: f32) -> Camera {
+    pub fn new(look_from: Vec3, look_at: Vec3, vup: Vec3, vfov: f32, aspect_ratio: f32) -> Camera {
         let theta = degrees_to_radians(vfov);
         let h = libm::tanf(theta / 2.0);
         let viewport_height: f32 = 2.0 * h;
         let viewport_width: f32 = aspect_ratio * viewport_height;
 
-        let focal_length: f32 = 1.0;
+        let w = (look_from - look_at).to_unit_vector();
+        let u = vup.cross(w).to_unit_vector();
+        let v = w.cross(u);
 
-        let origin = Vec3(0.0, 0.0, 0.0);
-        let horizontal = Vec3(viewport_width, 0.0, 0.0);
-        let vertical = Vec3(0.0, viewport_height, 0.0);
-        let lower_left_corner =
-            origin - horizontal / 2.0 - vertical / 2.0 - Vec3(0.0, 0.0, focal_length);
+        let origin = look_from;
+        let horizontal = viewport_width * u;
+        let vertical = viewport_height * v;
+        let lower_left_corner = origin - horizontal / 2.0 - vertical / 2.0 - w;
         Camera {
             origin,
             horizontal,
@@ -32,10 +33,10 @@ impl Camera {
         }
     }
 
-    pub fn get_ray(&self, u: f32, v: f32) -> Ray {
+    pub fn get_ray(&self, s: f32, t: f32) -> Ray {
         Ray::new(
             self.origin,
-            self.lower_left_corner + u * self.horizontal + v * self.vertical - self.origin,
+            self.lower_left_corner + s * self.horizontal + t * self.vertical - self.origin,
         )
     }
 }

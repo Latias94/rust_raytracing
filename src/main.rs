@@ -7,13 +7,12 @@ mod vec;
 
 use crate::camera::Camera;
 use crate::hit::{Hittable, HittableList, Sphere};
-use crate::materials::Lambertian;
+use crate::materials::{Dielectric, Lambertian, Metal};
 use crate::ray::Ray;
 use crate::vec::Vec3;
 use indicatif::ProgressBar;
 use lodepng::RGB;
 use rand::Rng;
-use std::f32::consts::PI;
 use std::path::Path;
 use std::rc::Rc;
 
@@ -49,41 +48,55 @@ fn main() {
 
     // World
 
-    let r = libm::cosf(PI / 4.0);
     let mut world = HittableList::new();
-    // let material_ground = Rc::new(Lambertian::new(Vec3(0.8, 0.8, 0.0)));
-    // let material_center = Rc::new(Lambertian::new(Vec3(0.1, 0.2, 0.5)));
-    let material_left = Rc::new(Lambertian::new(Vec3(0.0, 0.0, 1.0)));
-    let material_right = Rc::new(Lambertian::new(Vec3(1.0, 0.0, 0.0)));
+    let material_ground = Rc::new(Lambertian::new(Vec3(0.8, 0.8, 0.0)));
+    let material_center = Rc::new(Lambertian::new(Vec3(0.1, 0.2, 0.5)));
+    let material_left = Rc::new(Dielectric::new(1.5));
+    let material_right = Rc::new(Metal::new(Vec3(0.8, 0.6, 0.2), 0.0));
 
-    // world.add(Box::new(Sphere {
-    //     center: Vec3(0.0, -100.5, -1.0),
-    //     radius: 100.0,
-    //     material: material_ground.clone(),
-    // }));
-    // world.add(Box::new(Sphere {
-    //     center: Vec3(0.0, 0.0, -1.0),
-    //     radius: 0.5,
-    //     material: material_center.clone(),
-    // }));
-    // world.add(Box::new(Sphere {
-    //     center: Vec3(-1.0, 0.0, -1.0),
-    //     radius: 0.5,
-    //     material: material_left.clone(),
-    // }));
     world.add(Box::new(Sphere {
-        center: Vec3(-r, 0.0, -1.0),
-        radius: r,
+        center: Vec3(0.0, -100.5, -1.0),
+        radius: 100.0,
+        material: material_ground.clone(),
+    }));
+    world.add(Box::new(Sphere {
+        center: Vec3(0.0, 0.0, -1.0),
+        radius: 0.5,
+        material: material_center.clone(),
+    }));
+    world.add(Box::new(Sphere {
+        center: Vec3(-1.0, 0.0, -1.0),
+        radius: 0.5,
         material: material_left.clone(),
     }));
     world.add(Box::new(Sphere {
-        center: Vec3(r, 0.0, -1.0),
-        radius: r,
+        center: Vec3(-1.0, 0.0, -1.0),
+        radius: -0.45,
+        material: material_left.clone(),
+    }));
+    world.add(Box::new(Sphere {
+        center: Vec3(1.0, 0.0, -1.0),
+        radius: 0.5,
         material: material_right.clone(),
     }));
 
     // Camera
-    let cam = Camera::new(90.0, ASPECT_RATIO);
+    // a distant view
+    // let cam = Camera::new(
+    //     Vec3(-2.0, 2.0, 1.0),
+    //     Vec3(0.0, 0.0, -1.0),
+    //     Vec3(0.0, 1.0, 0.0),
+    //     90.0,
+    //     ASPECT_RATIO,
+    // );
+    // zooming in
+    let cam = Camera::new(
+        Vec3(-2.0, 2.0, 1.0),
+        Vec3(0.0, 0.0, -1.0),
+        Vec3(0.0, 1.0, 0.0),
+        20.0,
+        ASPECT_RATIO,
+    );
 
     // random f32
     let mut rng = rand::thread_rng();
