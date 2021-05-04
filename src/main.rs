@@ -81,21 +81,19 @@ fn main() {
     }));
 
     // Camera
-    // a distant view
-    // let cam = Camera::new(
-    //     Vec3(-2.0, 2.0, 1.0),
-    //     Vec3(0.0, 0.0, -1.0),
-    //     Vec3(0.0, 1.0, 0.0),
-    //     90.0,
-    //     ASPECT_RATIO,
-    // );
-    // zooming in
+    let look_from = Vec3(3.0, 3.0, 1.0);
+    let look_at = Vec3(0.0, 0.0, -1.0);
+    let vup = Vec3(0.0, 1.0, 0.0);
+    let dist_to_focus = (look_from - look_at).length();
+    let aperture: f32 = 2.0;
     let cam = Camera::new(
-        Vec3(-2.0, 2.0, 1.0),
-        Vec3(0.0, 0.0, -1.0),
-        Vec3(0.0, 1.0, 0.0),
+        look_from,
+        look_at,
+        vup,
         20.0,
         ASPECT_RATIO,
+        aperture,
+        dist_to_focus,
     );
 
     // random f32

@@ -46,9 +46,9 @@ pub struct Sphere {
 impl Hittable for Sphere {
     fn hit(&self, t_min: f32, t_max: f32, ray: &Ray) -> Option<Hit> {
         let oc = ray.origin - self.center;
-        let a = ray.direction.squared_length();
+        let a = ray.direction.length_squared();
         let half_b = oc.dot(ray.direction);
-        let c = oc.squared_length() - self.radius * self.radius;
+        let c = oc.length_squared() - self.radius * self.radius;
         let discriminant = half_b * half_b - a * c;
         if discriminant < 0.0 {
             return None;

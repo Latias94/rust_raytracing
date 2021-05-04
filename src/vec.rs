@@ -29,12 +29,12 @@ impl Vec3 {
         )
     }
 
-    pub fn squared_length(self) -> f32 {
+    pub fn length_squared(self) -> f32 {
         self.dot(self)
     }
 
     pub fn length(self) -> f32 {
-        self.squared_length().sqrt()
+        self.length_squared().sqrt()
     }
 
     pub fn to_u8(&self) -> [u8; 3] {
@@ -148,31 +148,41 @@ impl Vec3 {
     pub fn refract(v: &Vec3, n: &Vec3, etai_over_etat: f32) -> Vec3 {
         let cos_theta = f32::min((-(*v)).dot(*n), 1.0);
         let r_out_perp = etai_over_etat * (*v + cos_theta * (*n));
-        let r_out_parallel = libm::fabsf(1.0 - r_out_perp.squared_length()).sqrt() * -1.0 * *n;
+        let r_out_parallel = libm::fabsf(1.0 - r_out_perp.length_squared()).sqrt() * -1.0 * *n;
         r_out_perp + r_out_parallel
     }
     pub fn other_refract(uv: Vec3, n: Vec3, etai_over_etat: f32) -> Vec3 {
         let cos_theta = (-uv).dot(n);
         let r_out_parallel = etai_over_etat * (uv + cos_theta * n);
-        let r_out_perp = -(1.0 - r_out_parallel.squared_length()).sqrt() * n;
+        let r_out_perp = -(1.0 - r_out_parallel.length_squared()).sqrt() * n;
         r_out_parallel + r_out_perp
     }
 
-    pub fn rand_in_unit_sphere() -> Vec3 {
+    pub fn random_in_unit_disk() -> Vec3 {
+        let gen_range = || -> f32 { rand::thread_rng().gen_range(-1.0..1.0) };
+        loop {
+            let p = Vec3(gen_range(), gen_range(), 0.0);
+            if p.length_squared() < 1.0 {
+                return p
+            }
+        }
+    }
+
+    pub fn random_in_unit_sphere() -> Vec3 {
         loop {
             let p = 2.0 * random::<Vec3>() - Vec3(1.0, 1.0, 1.0);
-            if p.squared_length() < 1.0 {
+            if p.length_squared() < 1.0 {
                 return p;
             }
         }
     }
 
     pub fn random_unit_vector() -> Vec3 {
-        Vec3::rand_in_unit_sphere().to_unit_vector()
+        Vec3::random_in_unit_sphere().to_unit_vector()
     }
 
     pub fn random_in_hemisphere(normal: &Vec3) -> Vec3 {
-        let in_unit_sphere = Vec3::rand_in_unit_sphere();
+        let in_unit_sphere = Vec3::random_in_unit_sphere();
         if in_unit_sphere.dot(*normal) > 0.0 {
             // In the same hemisphere as the normal
             in_unit_sphere

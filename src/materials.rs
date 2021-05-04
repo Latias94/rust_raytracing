@@ -64,7 +64,7 @@ impl Material for Metal {
         let reflected = Vec3::reflect(&r_in.direction.to_unit_vector(), &rec.normal.unwrap());
         let scattered = Ray {
             origin: rec.p,
-            direction: reflected + self.fuzz * Vec3::rand_in_unit_sphere(),
+            direction: reflected + self.fuzz * Vec3::random_in_unit_sphere(),
         };
         let same_direction = scattered.direction.dot(rec.normal.unwrap()) > 0.0;
         if same_direction {
