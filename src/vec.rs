@@ -145,6 +145,19 @@ impl Vec3 {
         *v - 2.0 * v.dot(*n) * *n
     }
 
+    pub fn refract(v: &Vec3, n: &Vec3, etai_over_etat: f32) -> Vec3 {
+        let cos_theta = f32::min((-(*v)).dot(*n), 1.0);
+        let r_out_perp = etai_over_etat * (*v + cos_theta * (*n));
+        let r_out_parallel = libm::fabsf(1.0 - r_out_perp.squared_length()).sqrt() * -1.0 * *n;
+        r_out_perp + r_out_parallel
+    }
+    pub fn other_refract(uv: Vec3, n: Vec3, etai_over_etat: f32) -> Vec3 {
+        let cos_theta = (-uv).dot(n);
+        let r_out_parallel = etai_over_etat * (uv + cos_theta * n);
+        let r_out_perp = -(1.0 - r_out_parallel.squared_length()).sqrt() * n;
+        r_out_parallel + r_out_perp
+    }
+
     pub fn rand_in_unit_sphere() -> Vec3 {
         loop {
             let p = 2.0 * random::<Vec3>() - Vec3(1.0, 1.0, 1.0);
