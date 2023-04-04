@@ -4,8 +4,10 @@ use crate::vec::Vec3;
 use std::sync::Arc;
 
 pub struct Hit {
-    pub t: f32,  // 光击中物体时 t 的大小
-    pub p: Vec3, // 击中的点的位置
+    // 光击中物体时 t 的大小
+    pub t: f32,
+    // 击中的点的位置
+    pub p: Vec3,
     pub normal: Option<Vec3>,
     pub front_face: Option<bool>,
     pub material: Option<Arc<dyn Material>>,
@@ -33,7 +35,7 @@ impl Hit {
     }
 }
 
-pub trait Hittable : Send + Sync{
+pub trait Hittable: Send + Sync {
     fn hit(&self, t_min: f32, t_max: f32, r: &Ray) -> Option<Hit>;
 }
 

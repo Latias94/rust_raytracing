@@ -169,7 +169,7 @@ impl Vec3 {
     }
 
     pub fn random_color() -> Vec3 {
-        Vec3::random_color_in_range(0.0,1.0)
+        Vec3::random_color_in_range(0.0, 1.0)
     }
 
     pub fn random_color_in_range(min: f32, max: f32) -> Vec3 {

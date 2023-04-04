@@ -2,13 +2,11 @@
 name = "raytrace"
 version = "0.1.0"
 authors = ["Mingzhen Zhuang <superfrankie621@gmail.com>"]
-edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+edition = "2021"
 
 [dependencies]
-lodepng = "3.4"
-indicatif = "0.16.0"
-rand = "0.8.3"
-libm = "0.2.1"
-rayon = "1.5.0"
+lodepng = "3.7"
+indicatif = "0.17"
+rand = "0.8"
+libm = "0.2"
+rayon = "1.7"
